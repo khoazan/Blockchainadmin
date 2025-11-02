@@ -38,16 +38,24 @@ export default function Product() {
   async function fetchMedicines() {
     setLoading(true);
     try {
-      const res = await fetch("http://127.0.0.1:8000/drugs");
-      const data = await res.json();
-      if (Array.isArray(data)) {
-        setMedicines(data);
-      } else {
-        console.warn("⚠️ API không trả về mảng:", data);
-        setMedicines([]);
-      }
+      const provider = await connectWallet();
+      const signer = provider.getSigner();
+      const contract = getContract(signer);
+      const [ids, names, batches, prices, stages, owners] =
+        await contract.getAllDrugs();
+
+      const allMedicines = ids.map((id, i) => ({
+        id: id.toNumber(),
+        name: names[i],
+        batch: batches[i],
+        price: ethers.utils.formatEther(prices[i]),
+        stage: stages[i],
+        owner: owners[i],
+      }));
+
+      setMedicines(allMedicines);
     } catch (err) {
-      console.error("❌ Lỗi khi fetch thuốc:", err);
+      console.error("❌ Lỗi khi lấy thuốc:", err);
       setMedicines([]);
     } finally {
       setLoading(false);
@@ -70,10 +78,14 @@ export default function Product() {
       const tx = await contract.addDrug(name, batch, priceWei);
       alert("Đang gửi giao dịch...");
       await tx.wait();
+      const token = localStorage.getItem("access_token"); // token nhận được khi đăng nhập
 
       await fetch("http://127.0.0.1:8000/drugs", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // 🔥 Thêm dòng này
+        },
         body: JSON.stringify({ name, batch, price: parseFloat(priceStr) }),
       });
 
