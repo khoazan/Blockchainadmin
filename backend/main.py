@@ -9,8 +9,6 @@ import re
 import uvicorn
 import random
 import jwt
-import datetime
-from datetime import timedelta
 from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,6 +17,8 @@ from dotenv import load_dotenv
 from web3 import Web3
 from typing import List, Dict, Any
 from pathlib import Path
+from fastapi import Request
+from datetime import datetime, timedelta
 
 # -----------------------------------------------------------------------------------
 # MONGODB + AUTH
@@ -42,6 +42,8 @@ try:
     db = client.get_database()
     users_collection = db.users
     temp_sessions_collection = db.temp_sessions
+    transactions_collection = db.transactions
+
     print(f"✅ MongoDB connected to {client.address[0]} | DB: {db.name}")
 except Exception as e:
     raise RuntimeError(f"Error connecting to MongoDB: {e}")
@@ -90,10 +92,9 @@ app = FastAPI(title="Pharma SupplyChain Backend")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-    "http://localhost:5173",
-    "http://127.0.0.1:5173"
-],
-
+        "http://localhost:5173",
+        "http://127.0.0.1:5173"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -146,7 +147,7 @@ def send_signed_tx(tx):
 
 
 def create_access_token(user_id: str):
-    expire = datetime.datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     payload = {"user_id": user_id, "exp": expire}
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
@@ -188,8 +189,8 @@ def start_auth(request_data: PhoneRequest):
             "$set": {
                 "otp_code": otp_code,
                 "attempts": 0,
-                "created_at": datetime.datetime.utcnow(),
-                "expires_at": datetime.datetime.utcnow() + timedelta(minutes=5),
+                "created_at": datetime.utcnow(),
+                "expires_at": datetime.utcnow() + timedelta(minutes=5),
             }
         },
         upsert=True,
@@ -209,7 +210,7 @@ def verify_otp(data: OTPRequest):
     if not session:
         raise HTTPException(status_code=404, detail="Không tìm thấy phiên xác thực")
 
-    if session["expires_at"] < datetime.datetime.utcnow():
+    if session["expires_at"] < datetime.utcnow():
         temp_sessions_collection.delete_one({"phone": data.phone})
         raise HTTPException(status_code=400, detail="OTP đã hết hạn")
 
@@ -221,7 +222,7 @@ def verify_otp(data: OTPRequest):
     token_payload = {
         "phone": data.phone,
         "action": "set_password_allowed",
-        "exp": datetime.datetime.utcnow() + timedelta(minutes=30),
+        "exp": datetime.utcnow() + timedelta(minutes=30),
     }
     temp_token = jwt.encode(token_payload, SECRET_KEY, algorithm=ALGORITHM)
 
@@ -323,11 +324,62 @@ def transfer_drug(payload: TransferPayload, current_user: dict = Depends(get_cur
         return {"tx": tx_hash}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+# -----------------------------------------------------------------------------------
+# 💊 TRANSACTION API — Lưu & Thống kê giao dịch (MongoDB)
+# -----------------------------------------------------------------------------------
 
+@app.post("/api/purchase")
+async def add_purchase(request: Request):
+
+    """
+    Lưu thông tin giao dịch (mua thuốc) vào MongoDB.
+    """
+    data = await request.json()
+    data["timestamp"] = datetime.utcnow()
+
+    if "price_eth" not in data or "medicine" not in data:
+        raise HTTPException(status_code=400, detail="Thiếu thông tin giao dịch")
+
+    transactions_collection.insert_one({
+        "customer": current_user.get("phone", "unknown"),
+        "medicine": data["medicine"],
+        "price_eth": data["price_eth"],
+        "timestamp": data["timestamp"],
+    })
+
+    return {"message": "✅ Purchase recorded successfully"}
+
+
+@app.get("/api/revenue")
+def get_revenue(month: int, year: int):
+
+    """
+    Tính tổng doanh thu trong tháng (đơn vị ETH)
+    """
+    start = datetime(year, month, 1)
+    # Xử lý cuối tháng -> sang tháng kế tiếp
+    end = datetime(year + (month // 12), (month % 12) + 1, 1)
+
+    results = list(transactions_collection.find({
+        "timestamp": {"$gte": start, "$lt": end}
+    }))
+
+    total_revenue = sum(tx.get("price_eth", 0) for tx in results)
+
+    formatted = [
+        {
+            "customer": tx.get("customer"),
+            "medicine": tx.get("medicine"),
+            "price_eth": tx.get("price_eth"),
+            "date": tx["timestamp"].strftime("%Y-%m-%d")
+        }
+        for tx in results
+    ]
+
+    return {"total": total_revenue, "transactions": formatted}
 
 # -----------------------------------------------------------------------------------
 # KHỞI CHẠY SERVER
 # -----------------------------------------------------------------------------------
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
-

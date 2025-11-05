@@ -6,7 +6,7 @@ export default function Header() {
   const location = useLocation();
   const [account, setAccount] = useState(null);
 
-  // Hàm kết nối ví MetaMask
+  // Kết nối ví MetaMask
   const connectWallet = async () => {
     if (window.ethereum) {
       try {
@@ -54,8 +54,27 @@ export default function Header() {
         >
           Sản phẩm
         </Link>
-        <Link to="/my-drugs" className="text-white hover:text-green-300">
+        <Link
+          to="/my-drugs"
+          className={`hover:underline ${
+            location.pathname === "/my-drugs"
+              ? "text-green-400 font-semibold"
+              : ""
+          }`}
+        >
           💊 Thuốc của tôi
+        </Link>
+
+        {/* ✅ Thêm mục Doanh thu tại đây */}
+        <Link
+          to="/revenue"
+          className={`hover:underline ${
+            location.pathname === "/revenue"
+              ? "text-green-400 font-semibold"
+              : ""
+          }`}
+        >
+          💰 Doanh thu
         </Link>
       </nav>
 
