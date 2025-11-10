@@ -25,13 +25,13 @@ const PhoneForm = ({ onSubmit }) => {
                     onChange={(e) => setInputPhone(e.target.value.replace(/[^0-9]/g, ''))} // Chỉ cho phép nhập số
                     placeholder="Nhập số điện thoại"
                     required
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500"
+                    className="mt-1 block w-full border border-gray-200 rounded-lg p-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 placeholder-gray-400"
                 />
             </div>
             
             <button
                 type="submit"
-                className="w-full py-2 px-4 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition duration-150"
+                className="w-full py-2.5 px-4 bg-gradient-to-r from-emerald-600 to-sky-600 text-white font-semibold rounded-lg shadow hover:from-emerald-700 hover:to-sky-700 transition duration-150"
             >
                 Tiếp Tục
             </button>

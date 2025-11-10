@@ -34,7 +34,7 @@ const SetPasswordForm = ({ onSubmit }) => {
                         onChange={(e) => setPassword(e.target.value)}
                         required
                         placeholder="Mật khẩu tối thiểu 6 ký tự"
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3"
+                        className="mt-1 block w-full border border-gray-200 rounded-lg shadow-sm p-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                     />
                 </div>
                 
@@ -45,13 +45,13 @@ const SetPasswordForm = ({ onSubmit }) => {
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         required
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3"
+                        className="mt-1 block w-full border border-gray-200 rounded-lg shadow-sm p-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                     />
                 </div>
                 
                 <button
                     type="submit"
-                    className="w-full py-2 px-4 bg-purple-600 text-white font-semibold rounded-md hover:bg-purple-700 transition duration-150"
+                    className="w-full py-2.5 px-4 bg-gradient-to-r from-emerald-600 to-sky-600 text-white font-semibold rounded-lg shadow hover:from-emerald-700 hover:to-sky-700 transition duration-150"
                 >
                     Hoàn Tất Đăng Ký
                 </button>

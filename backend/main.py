@@ -93,8 +93,15 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
-        "http://127.0.0.1:5173"
+        "http://localhost:5174",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:5174",
+        "http://10.21.5.119:5173",
+        "http://10.21.5.119:5174",
+        "http://192.168.1.158:5173",
+        "http://192.168.1.158:5174",
     ],
+    allow_origin_regex=r"http://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+):(5173|5174)",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -330,54 +337,119 @@ def transfer_drug(payload: TransferPayload, current_user: dict = Depends(get_cur
 
 @app.post("/api/purchase")
 async def add_purchase(request: Request):
-
     """
     Lưu thông tin giao dịch (mua thuốc) vào MongoDB.
     """
-    data = await request.json()
-    data["timestamp"] = datetime.utcnow()
+    try:
+        # Log request info để debug
+        client_host = request.client.host if request.client else "unknown"
+        print(f"📥 Received purchase request from {client_host}")
+        print(f"📥 Request headers origin: {request.headers.get('origin', 'N/A')}")
+        
+        data = await request.json()
+        print(f"📥 Purchase data received: {json.dumps(data, indent=2, default=str)}")
+        
+        if "price_eth" not in data or "medicine" not in data:
+            print(f"❌ Missing required fields. Data keys: {list(data.keys())}")
+            raise HTTPException(status_code=400, detail="Thiếu thông tin giao dịch")
 
-    if "price_eth" not in data or "medicine" not in data:
-        raise HTTPException(status_code=400, detail="Thiếu thông tin giao dịch")
+        # Lấy customer (địa chỉ ví hoặc số điện thoại)
+        customer = data.get("customer", "unknown")
 
-    transactions_collection.insert_one({
-        "customer": current_user.get("phone", "unknown"),
-        "medicine": data["medicine"],
-        "price_eth": data["price_eth"],
-        "timestamp": data["timestamp"],
-    })
+        # Chuẩn hóa medicine
+        medicine_data = data.get("medicine", [])
+        medicine_str = ""
 
-    return {"message": "✅ Purchase recorded successfully"}
+        # Trường hợp medicine là JSON string
+        if isinstance(medicine_data, str):
+            try:
+                medicine_data = json.loads(medicine_data)
+            except json.JSONDecodeError:
+                # Nếu không phải JSON → coi như string thuốc đơn
+                medicine_str = medicine_data
+
+        # Nếu là list (ví dụ list object)
+        if isinstance(medicine_data, list):
+            medicine_str = ", ".join([
+                f"{item.get('name', item.get('medicine', 'Unknown'))} (x{item.get('qty', item.get('quantity', 1))})"
+                if isinstance(item, dict)
+                else str(item)
+                for item in medicine_data
+            ])
+        # Nếu là dict đơn lẻ
+        elif isinstance(medicine_data, dict):
+            medicine_str = f"{medicine_data.get('name', medicine_data.get('medicine', 'Unknown'))} (x{medicine_data.get('qty', medicine_data.get('quantity', 1))})"
+        # Nếu chưa có giá trị chuỗi thì fallback
+        elif not medicine_str:
+            medicine_str = str(medicine_data)
+
+        # Lưu vào MongoDB
+        transaction_doc = {
+            "customer": customer,
+            "medicine": medicine_str,
+            "price_eth": float(data["price_eth"]),
+            "timestamp": datetime.utcnow(),
+            "tx_hash": data.get("tx_hash"),
+            "chain_id": data.get("chain_id"),
+            "block_number": data.get("block_number"),
+        }
+
+        transactions_collection.insert_one(transaction_doc)
+        print(f"✅ Đã lưu giao dịch: {customer} - {medicine_str} - {data['price_eth']} ETH")
+
+        return {"message": "✅ Purchase recorded successfully", "id": str(transaction_doc.get("_id", ""))}
+
+    except Exception as e:
+        print(f"❌ Error recording purchase: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 
 @app.get("/api/revenue")
 def get_revenue(month: int, year: int):
-
-    """
-    Tính tổng doanh thu trong tháng (đơn vị ETH)
-    """
-    start = datetime(year, month, 1)
-    # Xử lý cuối tháng -> sang tháng kế tiếp
-    end = datetime(year + (month // 12), (month % 12) + 1, 1)
+    start = datetime(year, month, 1) - timedelta(hours=7)
+    end = datetime(year + (month // 12), (month % 12) + 1, 1) - timedelta(hours=7)
 
     results = list(transactions_collection.find({
         "timestamp": {"$gte": start, "$lt": end}
     }))
 
-    total_revenue = sum(tx.get("price_eth", 0) for tx in results)
+    total_revenue = sum(float(tx.get("price_eth") or 0) for tx in results)
+
+    print(f"✅ Found {len(results)} tx | Total = {total_revenue} ETH")
 
     formatted = [
         {
             "customer": tx.get("customer"),
-            "medicine": tx.get("medicine"),
+            "medicine": str(tx.get("medicine")),
             "price_eth": tx.get("price_eth"),
-            "date": tx["timestamp"].strftime("%Y-%m-%d")
+            "date": tx["timestamp"].strftime("%Y-%m-%d"),
         }
         for tx in results
     ]
 
     return {"total": total_revenue, "transactions": formatted}
 
+@app.get("/api/transactions")
+async def get_transactions():
+    """Lấy tất cả transactions (không cần auth)"""
+    try:
+        transactions = list(transactions_collection.find({}).sort("timestamp", -1).limit(100))
+        # Convert ObjectId và datetime thành string
+        for tx in transactions:
+            tx["_id"] = str(tx["_id"])
+            if isinstance(tx.get("timestamp"), datetime):
+                tx["timestamp"] = tx["timestamp"].isoformat()
+        return {"count": len(transactions), "data": transactions}
+    except Exception as e:
+        print(f"Error getting transactions: {e}")
+        return {"count": 0, "data": []}
+
+@app.get("/")
+async def root():
+    return {"message": "🚀 Pharma Supply Backend is running!"}
 # -----------------------------------------------------------------------------------
 # KHỞI CHẠY SERVER
 # -----------------------------------------------------------------------------------

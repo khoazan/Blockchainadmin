@@ -178,31 +178,36 @@ const AuthFlowPage = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-8 bg-white shadow-2xl rounded-xl border border-gray-100 relative">
-      {/* 1. NÚT QUAY LẠI (ICON) */}
-      {step > 0 && step !== 3 && (
-        <button
-          onClick={() => setStep(0)}
-          className="absolute top-8 left-8 text-gray-500 hover:text-gray-700 transition duration-150 p-1"
-        >
-          <IoArrowBackCircleOutline className="h-8 w-8" />
-        </button>
-      )}
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-sky-50 flex items-start sm:items-center justify-center py-10">
+      <div className="max-w-md w-full mx-auto p-8 bg-white/95 backdrop-blur rounded-2xl border border-emerald-50 shadow-xl shadow-emerald-100/60 relative">
+        {/* 1. NÚT QUAY LẠI (ICON) */}
+        {step > 0 && step !== 3 && (
+          <button
+            onClick={() => setStep(0)}
+            className="absolute top-8 left-8 text-gray-500 hover:text-gray-700 transition duration-150 p-1"
+          >
+            <IoArrowBackCircleOutline className="h-8 w-8" />
+          </button>
+        )}
 
-      {/* 2. TIÊU ĐỀ */}
-      <h2 className="text-2xl font-bold mb-4 text-center text-gray-800 ml-10 mr-10">
-        {step === 3 ? "Đăng Nhập Tài Khoản" : "Xác Thực Tài Khoản"}
-      </h2>
-
-      {/* 3. MESSAGE BOX */}
-      {message && (
-        <div className="p-3 mb-4 text-sm rounded-lg bg-yellow-100 text-yellow-800">
-          {message}
+        {/* 2. TIÊU ĐỀ */}
+        <div className="text-center mb-4">
+          <h2 className="text-2xl font-bold tracking-tight text-gray-800">
+            {step === 3 ? "Đăng Nhập Tài Khoản" : "Xác Thực Tài Khoản"}
+          </h2>
+          <p className="mt-1 text-xs text-gray-500">Nhanh chóng và an toàn</p>
         </div>
-      )}
 
-      {/* 4. RENDER FORM */}
-      {renderStep()}
+        {/* 3. MESSAGE BOX */}
+        {message && (
+          <div className="p-3 mb-4 text-sm rounded-lg bg-amber-50 text-amber-800 border border-amber-100">
+            {message}
+          </div>
+        )}
+
+        {/* 4. RENDER FORM */}
+        {renderStep()}
+      </div>
     </div>
   );
 };

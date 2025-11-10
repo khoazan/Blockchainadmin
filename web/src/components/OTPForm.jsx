@@ -19,7 +19,7 @@ const OTPForm = ({ onSubmit, phone, otpDisplay, onResend }) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* 1. MÃ RANDOM CHO DEVELOPER */}
-      <div className="p-3 bg-red-100 text-red-700 font-bold text-center rounded-md text-sm">
+      <div className="p-3 bg-emerald-50 text-emerald-700 font-semibold text-center rounded-md text-sm border border-emerald-100">
         MÃ XÁC THỰC : {otpDisplay}
       </div>
 
@@ -38,14 +38,14 @@ const OTPForm = ({ onSubmit, phone, otpDisplay, onResend }) => {
           placeholder="Nhập mã xác thực của bạn"
           maxLength="6"
           required
-          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-4 text-center text-2xl tracking-widest focus:ring-blue-500"
+          className="mt-1 block w-full border border-gray-200 rounded-lg p-4 text-center text-2xl tracking-widest shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 placeholder-gray-400"
         />
       </div>
 
       {/* 4. NÚT XÁC NHẬN */}
       <button
         type="submit"
-        className="w-full py-3 px-4 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 transition duration-150"
+        className="w-full py-3 px-4 bg-gradient-to-r from-emerald-600 to-sky-600 text-white font-semibold rounded-lg shadow hover:from-emerald-700 hover:to-sky-700 transition duration-150"
       >
         Xác Nhận
       </button>
@@ -54,7 +54,7 @@ const OTPForm = ({ onSubmit, phone, otpDisplay, onResend }) => {
       <button
         type="button"
         onClick={onResend}
-        className="w-full py-2 text-sm text-gray-500 hover:text-red-500 transition duration-150"
+        className="w-full py-2 text-sm text-gray-500 hover:text-emerald-600 transition duration-150"
       >
         Yêu cầu Mã mới
       </button>

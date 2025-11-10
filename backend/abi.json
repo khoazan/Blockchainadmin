@@ -1,26 +1,28 @@
 [
   {
+    "anonymous": false,
     "inputs": [
       {
-        "internalType": "string",
-        "name": "_name",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "_batch",
-        "type": "string"
-      },
-      {
+        "indexed": true,
         "internalType": "uint256",
-        "name": "_price",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "buyer",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
         "type": "uint256"
       }
     ],
-    "name": "addDrug",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
+    "name": "DrugPurchased",
+    "type": "event"
   },
   {
     "anonymous": false,
@@ -50,24 +52,37 @@
   {
     "inputs": [
       {
+        "internalType": "string",
+        "name": "_name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "_batch",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_price",
+        "type": "uint256"
+      }
+    ],
+    "name": "addDrug",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
         "name": "_id",
         "type": "uint256"
-      },
-      {
-        "internalType": "enum PharmaSupply.Stage",
-        "name": "_nextStage",
-        "type": "uint8"
-      },
-      {
-        "internalType": "address",
-        "name": "_to",
-        "type": "address"
       }
     ],
-    "name": "transferDrug",
+    "name": "buyDrug",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "payable",
     "type": "function"
   },
   {
@@ -109,7 +124,7 @@
         "type": "string"
       },
       {
-        "internalType": "address",
+        "internalType": "address payable",
         "name": "currentOwner",
         "type": "address"
       },
@@ -122,6 +137,44 @@
         "internalType": "enum PharmaSupply.Stage",
         "name": "stage",
         "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getAllDrugs",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "ids",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "string[]",
+        "name": "names",
+        "type": "string[]"
+      },
+      {
+        "internalType": "string[]",
+        "name": "batches",
+        "type": "string[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "prices",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "enum PharmaSupply.Stage[]",
+        "name": "stages",
+        "type": "uint8[]"
+      },
+      {
+        "internalType": "address[]",
+        "name": "owners",
+        "type": "address[]"
       }
     ],
     "stateMutability": "view",
@@ -203,6 +256,29 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_id",
+        "type": "uint256"
+      },
+      {
+        "internalType": "enum PharmaSupply.Stage",
+        "name": "_nextStage",
+        "type": "uint8"
+      },
+      {
+        "internalType": "address",
+        "name": "_to",
+        "type": "address"
+      }
+    ],
+    "name": "transferDrug",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   }
 ]

@@ -25,7 +25,7 @@ const LoginForm = ({ onSubmit, phone: initialPhone, onBack, onForgotPassword }) 
                     placeholder="Số điện thoại"
                     required
                     readOnly={!!initialPhone} 
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 bg-gray-100"
+                    className="mt-1 block w-full border border-gray-200 rounded-lg p-3 bg-gray-50 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                 />
             </div>
 
@@ -38,13 +38,13 @@ const LoginForm = ({ onSubmit, phone: initialPhone, onBack, onForgotPassword }) 
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     placeholder="Nhập mật khẩu của bạn"
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3"
+                    className="mt-1 block w-full border border-gray-200 rounded-lg shadow-sm p-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                 />
             </div>
             
             <button
                 type="submit"
-                className="w-full py-2 px-4 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition duration-150"
+                className="w-full py-2.5 px-4 bg-gradient-to-r from-emerald-600 to-sky-600 text-white font-semibold rounded-lg shadow hover:from-emerald-700 hover:to-sky-700 transition duration-150"
             >
                 Đăng Nhập
             </button>
@@ -56,7 +56,7 @@ const LoginForm = ({ onSubmit, phone: initialPhone, onBack, onForgotPassword }) 
                 <button 
                     type="button" 
                     onClick={onForgotPassword} 
-                    className="text-red-500 hover:text-red-600 font-medium"
+                    className="text-emerald-600 hover:text-emerald-700 font-medium"
                 >
                     Quên mật khẩu?
                 </button>
